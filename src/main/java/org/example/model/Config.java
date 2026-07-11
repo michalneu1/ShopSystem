@@ -9,10 +9,11 @@ public class Config {
     private int quantity;
     private ConfigType type;
 
-    public Config(String name, BigDecimal addValue, ConfigType type) {
+    public Config(String name, BigDecimal addValue, ConfigType type, int quantity) {
         this.name = name;
         this.addValue = addValue;
         this.type = type;
+        this.quantity = quantity;
     }
 
     public String getName() {

@@ -15,13 +15,22 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        // --- przygotowanie magazynu (Task 2) ---
         WareHouse wareHouse = new WareHouse();
         ProductManager manager = new ProductManager(wareHouse);
 
-        Product laptop = new Product(new BigDecimal("4000"), ProductType.Computer, "Laptop Pro", 5, new ArrayList<>());
-        Product phone = new Product(new BigDecimal("2500"), ProductType.Smartphone, "Smartfon X", 10, new ArrayList<>());
-        Product cable = new Product(new BigDecimal("30"), ProductType.Electronics, "Kabel USB-C", 100, new ArrayList<>());
+        Config i7 = new Config("Intel i7", new BigDecimal("800"), ConfigType.CPU,3);
+        Config i5 = new Config("Intel i5", new BigDecimal(500), ConfigType.CPU,2);
+        Config ram32 = new Config("32GB RAM", new BigDecimal("600"), ConfigType.RAM,5);
+        Product laptop = new Product(new BigDecimal("4000"), ProductType.Computer, "Laptop Pro", 5,
+                new ArrayList<>(List.of(i7, ram32)));
+
+        Config black = new Config("Czarny", BigDecimal.ZERO, ConfigType.COLOR,5);
+        Config etui = new Config("Etui", new BigDecimal("50"), ConfigType.ACCESSORY,1);
+        Product phone = new Product(new BigDecimal("2500"), ProductType.Smartphone, "Smartfon X", 10,
+                new ArrayList<>(List.of(black, etui)));
+
+        Product cable = new Product(new BigDecimal("30"), ProductType.Electronics, "Kabel USB-C", 100,
+                new ArrayList<>());
 
         manager.addToWareHouse(laptop);
         manager.addToWareHouse(phone);
@@ -30,31 +39,18 @@ public class Main {
         System.out.println("=== Produkty w magazynie ===");
         manager.showProducts();
 
-        // --- Task 4: dodawanie produktow do koszyka ---
         Cart cart = new Cart();
 
-        // laptop z konfiguracja (Task 1 - konfiguracja komputera)
-        List<Config> laptopConfig = List.of(
-                new Config("Intel i7", new BigDecimal("800"), ConfigType.CPU),
-                new Config("32GB RAM", new BigDecimal("600"), ConfigType.RAM)
-        );
-        cart.addToCart(new CartItem(laptop, laptopConfig, 1));
-
-        // smartfon z konfiguracja (Task 1 - kolor, akcesoria)
-        List<Config> phoneConfig = List.of(
-                new Config("Czarny", BigDecimal.ZERO, ConfigType.COLOR),
-                new Config("Etui", new BigDecimal("50"), ConfigType.ACCESSORY)
-        );
-        cart.addToCart(new CartItem(phone, phoneConfig, 2));
-
-        // zwykla elektronika - bez konfiguracji
+        cart.addToCart(new CartItem(laptop, List.of(i7, ram32), 199));
+        cart.addToCart(new CartItem(phone, List.of(black, etui), 2));
         cart.addToCart(new CartItem(cable, new ArrayList<>(), 3));
 
-        // --- Task 4: przegladanie koszyka ---
+        System.out.println("\n=== Proba dodania telefonu z procesorem ===");
+        cart.addToCart(new CartItem(phone, List.of(i7), 1));
+
         System.out.println("\n=== Koszyk ===");
         cart.showCart();
 
-        // --- Task 4: skladanie zamowienia ---
         System.out.println("\n=== Skladanie zamowienia ===");
         cart.makeOrder(manager);
 

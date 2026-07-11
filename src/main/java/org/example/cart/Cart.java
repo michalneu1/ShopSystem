@@ -13,7 +13,14 @@ public class Cart {
     private final List<CartItem> items = new ArrayList<>();
 
     public void addToCart(CartItem item) {
-        // jesli taka sama pozycja (produkt + konfiguracja) juz jest w koszyku, laczymy ilosci
+        for (Config chosen : item.getChosenConfigs()) {
+            if (!item.getProduct().getConfigs().contains(chosen)) {
+                System.out.println("Nie dodano do koszyka - konfiguracja \"" + chosen
+                        + "\" nie jest dostepna dla produktu: " + item.getProduct().getName());
+                return;
+            }
+        }
+
         for (CartItem existing : items) {
             if (existing.equals(item)) {
                 existing.setQuantity(existing.getQuantity() + item.getQuantity());
@@ -53,7 +60,6 @@ public class Cart {
             for (Config chosenConfig : item.getChosenConfigs()) {
                 itemPrice = itemPrice.add(chosenConfig.getAddValue());
             }
-            // cena pozycji * ilosc
             amount = amount.add(itemPrice.multiply(BigDecimal.valueOf(item.getQuantity())));
         }
         return amount;
@@ -65,7 +71,6 @@ public class Cart {
             return;
         }
 
-        // sprawdzamy dostepnosc kazdej pozycji w magazynie
         for (CartItem item : items) {
             Optional<Product> inStock = manager.findByID(item.getProduct().getId());
             if (inStock.isEmpty()) {
@@ -80,7 +85,6 @@ public class Cart {
             }
         }
 
-        // wszystko dostepne - zdejmujemy ze stanu magazynu
         for (CartItem item : items) {
             manager.removeFromWareHouse(item.getProduct().getId(), item.getQuantity());
         }
