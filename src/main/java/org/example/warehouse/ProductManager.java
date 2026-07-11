@@ -17,8 +17,8 @@ public class ProductManager {
         wareHouse.getProducts().add(product);
     }
 
-    public void removeFromWareHouse(int id) {
-        findByID(id).ifPresent(p -> wareHouse.getProducts().remove(p));
+    public void removeFromWareHouse(int id, int quantity) {
+        findByID(id).ifPresent(p -> p.setQuantity(p.getQuantity()-quantity));
     }
 
     public Optional<Product> findByID(int id) {
