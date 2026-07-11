@@ -15,8 +15,8 @@ public class Product {
     private List<Config> configs = new ArrayList<>();
     private int quantity;
 
-    public Product(int id, BigDecimal value, ProductType type, String name, int quantity, List<Config> configs) {
-        this.id = id;
+    public Product(BigDecimal value, ProductType type, String name, int quantity, List<Config> configs) {
+        this.id = COUNTER.getAndIncrement();
         this.value = value;
         this.type = type;
         this.name = name;
@@ -72,12 +72,12 @@ public class Product {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Product product = (Product) o;
-        return Objects.equals(value, product.value) && Objects.equals(name, product.name) && type == product.type;
+        return id == product.id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value, name, type);
+        return Objects.hashCode(id);
     }
 
     @Override
