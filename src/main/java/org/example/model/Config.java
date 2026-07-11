@@ -48,6 +48,11 @@ public class Config {
     }
 
     @Override
+    public String toString() {
+        return type + ": " + name + " (+" + addValue + ")";
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Config config = (Config) o;
