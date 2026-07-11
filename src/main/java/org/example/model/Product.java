@@ -12,7 +12,6 @@ public class Product {
     private BigDecimal value;
     private String name;
     private ProductType type;
-    private List<Config> configs = new ArrayList<>();
     private int quantity;
 
     public Product(BigDecimal value, ProductType type, String name, int quantity, List<Config> configs) {
@@ -21,7 +20,6 @@ public class Product {
         this.type = type;
         this.name = name;
         this.quantity = quantity;
-        this.configs = configs;
     }
 
     public int getId() {
@@ -52,14 +50,6 @@ public class Product {
         this.type = type;
     }
 
-    public List<Config> getConfigs() {
-        return configs;
-    }
-
-    public void setConfigs(List<Config> configs) {
-        this.configs = configs;
-    }
-
     public int getQuantity() {
         return quantity;
     }
@@ -87,7 +77,6 @@ public class Product {
                 ", value=" + value +
                 ", name='" + name + '\'' +
                 ", type=" + type +
-                ", configs=" + configs +
                 ", quantity=" + quantity +
                 '}';
     }
