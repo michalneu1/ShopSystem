@@ -33,6 +33,10 @@ public class Order {
         return value;
     }
 
+    public Client getClient() {
+        return client;
+    }
+
     @Override
     public String toString() {
         return "Order{" +

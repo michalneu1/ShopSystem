@@ -1,7 +1,9 @@
 package org.example.cart;
 
+import org.example.model.Client;
 import org.example.model.Config;
 import org.example.model.Product;
+import org.example.order.Order;
 import org.example.warehouse.ProductManager;
 
 import java.math.BigDecimal;
@@ -65,31 +67,43 @@ public class Cart {
         return amount;
     }
 
-    public void makeOrder(ProductManager manager) {
+    public Optional<Order> makeOrder(ProductManager manager, Client client) {
         if (items.isEmpty()) {
             System.out.println("Nie mozna zlozyc zamowienia - koszyk jest pusty.");
-            return;
+            return Optional.empty();
         }
 
         for (CartItem item : items) {
             Optional<Product> inStock = manager.findByID(item.getProduct().getId());
             if (inStock.isEmpty()) {
                 System.out.println("Produktu nie ma juz w magazynie: " + item.getProduct().getName());
-                return;
+                return Optional.empty();
             }
             if (inStock.get().getQuantity() < item.getQuantity()) {
                 System.out.println("Za malo sztuk w magazynie dla: " + item.getProduct().getName()
                         + " (dostepne: " + inStock.get().getQuantity()
                         + ", w koszyku: " + item.getQuantity() + ")");
-                return;
+                return Optional.empty();
+            }
+            for (Config chosen : item.getChosenConfigs()) {
+                Optional<Config> stockConfig = inStock.get().getConfigs().stream()
+                        .filter(c -> c.equals(chosen)).findFirst();
+                if (stockConfig.isEmpty()) {
+                    System.out.println("Konfiguracji nie ma juz w magazynie: " + chosen.getName()
+                            + " dla produktu: " + item.getProduct().getName());
+                    return Optional.empty();
+                }
+                if (stockConfig.get().getQuantity() < item.getQuantity()) {
+                    System.out.println("Za malo konfiguracji \"" + chosen.getName() + "\" w magazynie dla: "
+                            + item.getProduct().getName() + " (dostepne: " + stockConfig.get().getQuantity()
+                            + ", potrzeba: " + item.getQuantity() + ")");
+                    return Optional.empty();
+                }
             }
         }
-
-        for (CartItem item : items) {
-            manager.removeFromWareHouse(item.getProduct().getId(), item.getQuantity());
-        }
-
+        Optional<Order> order = Optional.of(new Order(new ArrayList<>(items), getTotal(),client));
         System.out.println("Zamowienie zlozone. Do zaplaty: " + getTotal());
         items.clear();
+        return order;
     }
 }
