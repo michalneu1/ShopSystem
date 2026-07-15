@@ -2,9 +2,11 @@ package org.example.cli;
 
 import org.example.cart.Cart;
 import org.example.cart.CartItem;
+import org.example.exception.ProductNotFoundException;
 import org.example.model.Client;
 import org.example.model.Config;
 import org.example.model.Product;
+import org.example.model.ProductType;
 import org.example.order.Order;
 import org.example.order.OrderProcessor;
 import org.example.warehouse.ProductManager;
@@ -26,35 +28,39 @@ public class ShopCLI {
         cart = new Cart();
     }
 
-    public void run(){
+    public void run() {
         boolean running = true;
-        while (running){
+        while (running) {
             showMenu();
             System.out.println("Podaj odpowiedź");
-            switch (getChoice()){
-                case 1 -> manger.showProducts();
-                case 2 -> addProductToCart();
-                case 3 -> cart.showCart();
-                case 4 -> placeOrder();
-                case 5 -> cart = new Cart();
-                case 6 -> running = false;
-                default -> System.out.println("Nieznana opcja");
+            try {
+                switch (getChoice()) {
+                    case 1 -> manger.showProducts();
+                    case 2 -> addProductToCart();
+                    case 3 -> cart.showCart();
+                    case 4 -> placeOrder();
+                    case 5 -> cart = new Cart();
+                    case 6 -> running = false;
+                    default -> System.out.println("Nieznana opcja");
+                }
+            } catch (Exception e) {
+                System.out.println("Błąd: " + e.getMessage());
             }
         }
         System.out.println("Do widzenia!");
     }
 
-    private int getChoice(){
+    private int getChoice() {
         while (true) {
             try {
                 return Integer.parseInt(scanner.nextLine().trim());
-            } catch (NumberFormatException e){
+            } catch (NumberFormatException e) {
                 System.out.println("Podana wartość nie jest poprawna");
             }
         }
     }
 
-    private void showMenu(){
+    private void showMenu() {
         System.out.println("1. Przeglądaj produkty");
         System.out.println("2. Dodaj produkt do koszyka");
         System.out.println("3. Sprawdż koszyk");
@@ -63,37 +69,41 @@ public class ShopCLI {
         System.out.println("6. wyjdź");
     }
 
-    private void addProductToCart(){
+    private void addProductToCart() {
         manger.showProducts();
         System.out.println("Podaj id produktu");
         int choice = getChoice();
         System.out.println("Podaj ilość");
         int choosedQuantity = getChoice();
-        Optional<Product> choosedProduct = manger.findByID(choice);
-        if(choosedProduct.isPresent()){
-            int counter = 0;
-            for (Config config : choosedProduct.get().getConfigs()) {
-                System.out.println(counter + " " + config);
-                counter++;
-            }
-            System.out.println("Podaj wybrane konfiguracje po przecinku np: (0,1,2) lub Enter aby pominąć");
-            ArrayList<Config> choosedConfigs = new ArrayList<>();
-            String line = scanner.nextLine().trim();
-            if (!line.isEmpty()) {
-                for (String s : line.split(",")) {
-                    try {
-                        Config original = choosedProduct.get().getConfigs().get(Integer.parseInt(s.trim()));
-                        System.out.println(original);
-                        System.out.println("Podaj ilość");
-                        choosedConfigs.add(new Config(original, getChoice()));
-                    } catch (NumberFormatException | IndexOutOfBoundsException e) {
-                        System.out.println("Pomijam niepoprawną konfigurację: " + s);
-                    }
+        Product choosedProduct = manger.findByID(choice)
+                .orElseThrow(() -> new ProductNotFoundException(choice));
+        int counter = 0;
+        for (Config config : choosedProduct.getConfigs()) {
+            System.out.println(counter + " " + config);
+            counter++;
+        }
+        if(choosedProduct.getType() == ProductType.Electronics){
+            cart.addToCart(new CartItem(choosedProduct,choosedQuantity));
+            System.out.println("Dodano do koszyka.");
+            return;
+        }
+        System.out.println("Podaj wybrane konfiguracje po przecinku np: (0,1,2) lub Enter aby pominąć");
+        ArrayList<Config> choosedConfigs = new ArrayList<>();
+        String line = scanner.nextLine().trim();
+        if (!line.isEmpty()) {
+            for (String s : line.split(",")) {
+                try {
+                    Config original = choosedProduct.getConfigs().get(Integer.parseInt(s.trim()));
+                    System.out.println(original);
+                    System.out.println("Podaj ilość");
+                    choosedConfigs.add(new Config(original, getChoice()));
+                } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                    System.out.println("Pomijam niepoprawną konfigurację: " + s);
                 }
             }
-            cart.addToCart(new CartItem(choosedProduct.get(), choosedConfigs, choosedQuantity));
-            System.out.println("Dodano do koszyka.");
         }
+        cart.addToCart(new CartItem(choosedProduct, choosedConfigs, choosedQuantity));
+        System.out.println("Dodano do koszyka.");
     }
 
     private void placeOrder() {

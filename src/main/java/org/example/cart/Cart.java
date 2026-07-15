@@ -1,5 +1,8 @@
 package org.example.cart;
 
+import org.example.exception.CartEmptyException;
+import org.example.exception.IllegalConfigurationException;
+import org.example.exception.InsufficientStockException;
 import org.example.model.Client;
 import org.example.model.Config;
 import org.example.model.Product;
@@ -17,9 +20,8 @@ public class Cart {
     public void addToCart(CartItem item) {
         for (Config chosen : item.getChosenConfigs()) {
             if (!item.getProduct().getConfigs().contains(chosen)) {
-                System.out.println("Nie dodano do koszyka - konfiguracja \"" + chosen
+                throw new IllegalConfigurationException("Nie dodano do koszyka - konfiguracja \"" + chosen
                         + "\" nie jest dostepna dla produktu: " + item.getProduct().getName());
-                return;
             }
         }
 
@@ -46,7 +48,7 @@ public class Cart {
 
     public void showCart() {
         if (items.isEmpty()) {
-            System.out.println("Koszyk jest pusty.");
+            System.out.println("Koszyk jest pusty");
             return;
         }
         for (CartItem item : items) {
@@ -69,39 +71,30 @@ public class Cart {
 
     public Optional<Order> makeOrder(ProductManager manager, Client client) {
         if (items.isEmpty()) {
-            System.out.println("Nie mozna zlozyc zamowienia - koszyk jest pusty.");
-            return Optional.empty();
+            throw new CartEmptyException();
         }
 
         for (CartItem item : items) {
             Optional<Product> inStock = manager.findByID(item.getProduct().getId());
             if (inStock.isEmpty()) {
-                System.out.println("Produktu nie ma juz w magazynie: " + item.getProduct().getName());
-                return Optional.empty();
+                throw new InsufficientStockException(item.getProduct().getName(), item.getQuantity());
             }
             if (inStock.get().getQuantity() < item.getQuantity()) {
-                System.out.println("Za malo sztuk w magazynie dla: " + item.getProduct().getName()
-                        + " (dostepne: " + inStock.get().getQuantity()
-                        + ", w koszyku: " + item.getQuantity() + ")");
-                return Optional.empty();
+                throw new InsufficientStockException(
+                        item.getProduct().getName(), item.getQuantity(), inStock.get().getQuantity());
             }
             for (Config chosen : item.getChosenConfigs()) {
                 Optional<Config> stockConfig = inStock.get().getConfigs().stream()
                         .filter(c -> c.equals(chosen)).findFirst();
                 if (stockConfig.isEmpty()) {
-                    System.out.println("Konfiguracji nie ma juz w magazynie: " + chosen.getName()
-                            + " dla produktu: " + item.getProduct().getName());
-                    return Optional.empty();
+                    throw new InsufficientStockException(chosen.getName(), chosen.getQuantity());
                 }
                 if (stockConfig.get().getQuantity() < chosen.getQuantity()) {
-                    System.out.println("Za malo konfiguracji \"" + chosen.getName() + "\" w magazynie dla: "
-                            + item.getProduct().getName() + " (dostepne: " + stockConfig.get().getQuantity()
-                            + ", potrzeba: " + chosen.getQuantity() + ")");
-                    return Optional.empty();
+                    throw new InsufficientStockException(chosen.getName(), chosen.getQuantity(), stockConfig.get().getQuantity());
                 }
             }
         }
-        Optional<Order> order = Optional.of(new Order(new ArrayList<>(items), getTotal(),client));
+        Optional<Order> order = Optional.of(new Order(new ArrayList<>(items), getTotal(), client));
         System.out.println("Zamowienie zlozone. Do zaplaty: " + getTotal());
         items.clear();
         return order;
