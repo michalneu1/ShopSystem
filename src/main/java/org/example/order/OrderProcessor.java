@@ -9,6 +9,10 @@ import java.math.BigDecimal;
 public class OrderProcessor {
     ProductManager manager;
 
+    public ProductManager getManager() {
+        return manager;
+    }
+
     public OrderProcessor(ProductManager manager) {
         this.manager = manager;
     }
@@ -20,7 +24,7 @@ public class OrderProcessor {
                 for (Config config : itemInWarehouse.getConfigs()) {
                     for (Config chosenConfig : item.getChosenConfigs()) {
                         if (chosenConfig.equals(config)) {
-                            config.setQuantity(config.getQuantity() - item.getQuantity());
+                            config.setQuantity(config.getQuantity() - chosenConfig.getQuantity());
                         }
                     }
                 }

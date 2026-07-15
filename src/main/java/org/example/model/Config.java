@@ -16,6 +16,19 @@ public class Config {
         this.quantity = quantity;
     }
 
+    public Config(Config other) {
+        this.name = other.name;
+        this.addValue = other.addValue;
+        this.type = other.type;
+        this.quantity = other.quantity;
+    }
+    public Config(Config other, int quantity) {
+        this.name = other.name;
+        this.addValue = other.addValue;
+        this.type = other.type;
+        this.quantity = quantity;
+    }
+
     public String getName() {
         return name;
     }
@@ -50,7 +63,7 @@ public class Config {
 
     @Override
     public String toString() {
-        return "Config{" +
+        return " Config{" +
                 "name='" + name + '\'' +
                 ", addValue=" + addValue +
                 ", quantity=" + quantity +

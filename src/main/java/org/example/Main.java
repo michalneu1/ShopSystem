@@ -2,6 +2,7 @@ package org.example;
 
 import org.example.cart.Cart;
 import org.example.cart.CartItem;
+import org.example.cli.ShopCLI;
 import org.example.model.*;
 import org.example.order.Order;
 import org.example.order.OrderProcessor;
@@ -38,29 +39,30 @@ public class Main {
 
         System.out.println("=== Produkty w magazynie ===");
         manager.showProducts();
-        Client client = new Client("Jan","kowalski", (short) 15,"test@interia.pl");
-        Cart cart = new Cart();
 
-        Config i7c = new Config("Intel i7", new BigDecimal(800), ConfigType.CPU,1);
-        Config ram32c = new Config("32GB RAM", new BigDecimal("600"), ConfigType.RAM,1);
-
-        cart.addToCart(new CartItem(laptop, List.of(i7c, ram32c), 1));
-        cart.addToCart(new CartItem(phone, List.of(black, etui), 2));
-        cart.addToCart(new CartItem(cable, new ArrayList<>(), 3));
-
-        System.out.println("\n=== Proba dodania telefonu z procesorem ===");
-        cart.addToCart(new CartItem(phone, List.of(i7), 1));
-
-        System.out.println("\n=== Koszyk ===");
-        cart.showCart();
-
-        System.out.println("\n=== Skladanie zamowienia ===");
-        Optional<Order> order = cart.makeOrder(manager, client);
-
-        OrderProcessor processor = new OrderProcessor(manager);
-        order.ifPresent(processor::processOrder);
-
-        System.out.println("\n=== Stan magazynu po zamowieniu ===");
-        manager.showProducts();
+//
+//        Config i7c = new Config("Intel i7", new BigDecimal(800), ConfigType.CPU,1);
+//        Config ram32c = new Config("32GB RAM", new BigDecimal("600"), ConfigType.RAM,1);
+//
+//        cart.addToCart(new CartItem(laptop, List.of(i7c, ram32c), 1));
+//        cart.addToCart(new CartItem(phone, List.of(black, etui), 2));
+//        cart.addToCart(new CartItem(cable, new ArrayList<>(), 3));
+//
+//        System.out.println("\n=== Proba dodania telefonu z procesorem ===");
+//        cart.addToCart(new CartItem(phone, List.of(i7), 1));
+//
+//        System.out.println("\n=== Koszyk ===");
+//        cart.showCart();
+//
+//        System.out.println("\n=== Skladanie zamowienia ===");
+//        Optional<Order> order = cart.makeOrder(manager, client);
+//
+//        OrderProcessor processor = new OrderProcessor(manager);
+//        order.ifPresent(processor::processOrder);
+//
+//        System.out.println("\n=== Stan magazynu po zamowieniu ===");
+//        manager.showProducts();
+        ShopCLI cli = new ShopCLI(new OrderProcessor(manager));
+        cli.run();
     }
 }
