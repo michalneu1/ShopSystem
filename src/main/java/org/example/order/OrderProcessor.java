@@ -5,8 +5,12 @@ import org.example.model.Config;
 import org.example.warehouse.ProductManager;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 
 public class OrderProcessor {
+    private static final DateTimeFormatter INVOICE_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     ProductManager manager;
 
     public ProductManager getManager() {
@@ -37,6 +41,7 @@ public class OrderProcessor {
         StringBuilder sb = new StringBuilder();
         sb.append("========== FAKTURA ==========\n");
         sb.append("Nr zamowienia: ").append(order.getId()).append("\n");
+        sb.append("Data zlozenia: ").append(order.getCreatedAt().format(INVOICE_DATE_FORMAT)).append("\n");
         sb.append("Klient: ").append(order.getClient()).append("\n");
         sb.append("-----------------------------\n");
         for (CartItem item : order.getItems()) {
