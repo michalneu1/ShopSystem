@@ -93,10 +93,10 @@ public class Cart {
                             + " dla produktu: " + item.getProduct().getName());
                     return Optional.empty();
                 }
-                if (stockConfig.get().getQuantity() < item.getQuantity()) {
+                if (stockConfig.get().getQuantity() < chosen.getQuantity()) {
                     System.out.println("Za malo konfiguracji \"" + chosen.getName() + "\" w magazynie dla: "
                             + item.getProduct().getName() + " (dostepne: " + stockConfig.get().getQuantity()
-                            + ", potrzeba: " + item.getQuantity() + ")");
+                            + ", potrzeba: " + chosen.getQuantity() + ")");
                     return Optional.empty();
                 }
             }
