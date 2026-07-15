@@ -3,6 +3,7 @@ package org.example.cart;
 import org.example.model.Config;
 import org.example.model.Product;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,6 +11,10 @@ public class CartItem {
     private final Product product;
     private final List<Config> chosenConfigs;
     private int quantity;
+
+    public CartItem(Product choosedProduct,int quantity) {
+        this(choosedProduct,new ArrayList<>(),quantity);
+    }
 
     public Product getProduct() {
         return product;
