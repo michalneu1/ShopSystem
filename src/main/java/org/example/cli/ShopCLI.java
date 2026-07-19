@@ -9,8 +9,11 @@ import org.example.model.Product;
 import org.example.model.ProductType;
 import org.example.order.Order;
 import org.example.order.OrderProcessor;
+import org.example.persistence.DiscountRepository;
 import org.example.warehouse.ProductManager;
 
+import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Scanner;
@@ -24,6 +27,7 @@ public class ShopCLI {
     private Scanner scanner;
     private Cart cart;
     private ExecutorService pool = Executors.newFixedThreadPool(4);
+    private final DiscountRepository discountRepository = new DiscountRepository(Path.of("discounts.txt"));
 
     public ShopCLI(OrderProcessor orderProcessor) {
         this.manger = orderProcessor.getManager();
@@ -120,13 +124,27 @@ public class ShopCLI {
             return;
         }
         Optional<Order> order = cart.makeOrder(readClient());
+        BigDecimal discount = getDiscount();
         order.ifPresent(o -> pool.submit(() -> {
             try {
-                orderProcessor.processOrder(o);
+                orderProcessor.processOrder(o,discount);
             } catch (Exception e) {
                 System.out.println("Błąd: " + e.getMessage());
             }
         }));
+    }
+
+    private BigDecimal getDiscount() {
+        System.out.println("Wpisz kod rabatowy (Enter = brak)");
+        String code = scanner.nextLine().trim();
+        if (code.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal discount = discountRepository.getDiscount(code);
+        if (discount.compareTo(BigDecimal.ZERO) == 0) {
+            System.out.println("Nieznany kod rabatowy - zamowienie bez rabatu");
+        }
+        return discount;
     }
 
     private Client readClient() {
