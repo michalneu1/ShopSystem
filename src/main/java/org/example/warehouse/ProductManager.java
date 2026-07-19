@@ -5,9 +5,11 @@ import org.example.model.Product;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+
 public class ProductManager {
 
     private final WareHouse wareHouse;
+
 
     public ProductManager(WareHouse wareHouse) {
         this.wareHouse = wareHouse;

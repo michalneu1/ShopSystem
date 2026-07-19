@@ -33,6 +33,7 @@ public class Product {
     }
 
     public void setValue(BigDecimal value) {
+
         this.value = value;
     }
 
@@ -57,6 +58,7 @@ public class Product {
     }
 
     public void setConfigs(List<Config> configs) {
+
         this.configs = configs;
     }
 
@@ -65,10 +67,11 @@ public class Product {
     }
 
     public void setQuantity(int quantity) {
+        if(quantity<0){
+            throw new IllegalArgumentException("Wartość ilości nie może być mniejsza od 0");
+        }
         this.quantity = quantity;
     }
-
-
 
     @Override
     public String toString() {

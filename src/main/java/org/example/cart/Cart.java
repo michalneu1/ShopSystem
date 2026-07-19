@@ -69,33 +69,11 @@ public class Cart {
         return amount;
     }
 
-    public Optional<Order> makeOrder(ProductManager manager, Client client) {
+    public Optional<Order> makeOrder(Client client) {
         if (items.isEmpty()) {
             throw new CartEmptyException();
         }
-
-        for (CartItem item : items) {
-            Optional<Product> inStock = manager.findByID(item.getProduct().getId());
-            if (inStock.isEmpty()) {
-                throw new InsufficientStockException(item.getProduct().getName(), item.getQuantity());
-            }
-            if (inStock.get().getQuantity() < item.getQuantity()) {
-                throw new InsufficientStockException(
-                        item.getProduct().getName(), item.getQuantity(), inStock.get().getQuantity());
-            }
-            for (Config chosen : item.getChosenConfigs()) {
-                Optional<Config> stockConfig = inStock.get().getConfigs().stream()
-                        .filter(c -> c.equals(chosen)).findFirst();
-                if (stockConfig.isEmpty()) {
-                    throw new InsufficientStockException(chosen.getName(), chosen.getQuantity());
-                }
-                if (stockConfig.get().getQuantity() < chosen.getQuantity()) {
-                    throw new InsufficientStockException(chosen.getName(), chosen.getQuantity(), stockConfig.get().getQuantity());
-                }
-            }
-        }
         Optional<Order> order = Optional.of(new Order(new ArrayList<>(items), getTotal(), client));
-        System.out.println("Zamowienie zlozone. Do zaplaty: " + getTotal());
         items.clear();
         return order;
     }

@@ -14,12 +14,16 @@ import org.example.warehouse.ProductManager;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class ShopCLI {
     private ProductManager manger;
     private OrderProcessor orderProcessor;
     private Scanner scanner;
     private Cart cart;
+    private ExecutorService pool = Executors.newFixedThreadPool(4);
 
     public ShopCLI(OrderProcessor orderProcessor) {
         this.manger = orderProcessor.getManager();
@@ -40,7 +44,11 @@ public class ShopCLI {
                     case 3 -> cart.showCart();
                     case 4 -> placeOrder();
                     case 5 -> cart = new Cart();
-                    case 6 -> running = false;
+                    case 6 -> {
+                        running = false;
+                        pool.shutdown();
+                        pool.awaitTermination(10, TimeUnit.SECONDS);
+                    }
                     default -> System.out.println("Nieznana opcja");
                 }
             } catch (Exception e) {
@@ -82,8 +90,8 @@ public class ShopCLI {
             System.out.println(counter + " " + config);
             counter++;
         }
-        if(choosedProduct.getType() == ProductType.Electronics){
-            cart.addToCart(new CartItem(choosedProduct,choosedQuantity));
+        if (choosedProduct.getType() == ProductType.Electronics) {
+            cart.addToCart(new CartItem(choosedProduct, choosedQuantity));
             System.out.println("Dodano do koszyka.");
             return;
         }
@@ -111,8 +119,14 @@ public class ShopCLI {
             System.out.println("Koszyk jest pusty.");
             return;
         }
-        Optional<Order> order = cart.makeOrder(manger, readClient());
-        order.ifPresent(orderProcessor::processOrder);
+        Optional<Order> order = cart.makeOrder(readClient());
+        order.ifPresent(o -> pool.submit(() -> {
+            try {
+                orderProcessor.processOrder(o);
+            } catch (Exception e) {
+                System.out.println("Błąd: " + e.getMessage());
+            }
+        }));
     }
 
     private Client readClient() {
