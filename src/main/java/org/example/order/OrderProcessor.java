@@ -9,6 +9,7 @@ import org.example.persistence.OrderRepository;
 import org.example.warehouse.ProductManager;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
@@ -32,7 +33,7 @@ public class OrderProcessor {
         this.repository = repository;
     }
 
-    public void processOrder(Order order) {
+    public void processOrder(Order order, BigDecimal discount) {
         lock.lock();
         try {
             order.setStatus(StatusType.PENDING);
@@ -69,7 +70,7 @@ public class OrderProcessor {
                 });
             }
             order.setStatus(StatusType.ACCEPTED);
-            System.out.println("Zamowienie zlozone. Do zaplaty: " + order.getValue());
+            System.out.println("Zamowienie zlozone. Do zaplaty: " + discountedValue(order, discount));
         } catch (InsufficientStockException e) {
             order.setStatus(StatusType.REJECTED, e.getMessage());
             throw e;
@@ -78,12 +79,12 @@ public class OrderProcessor {
             throw e;
         } finally {
             lock.unlock();
-            String invoice = generateInvoice(order);
+            String invoice = generateInvoice(order, discount);
             repository.save(order, invoice);
         }
     }
 
-    public String generateInvoice(Order order) {
+    public String generateInvoice(Order order, BigDecimal discount) {
         StringBuilder sb = new StringBuilder();
         String title =
                 switch (order.getStatus().getType()) {
@@ -112,8 +113,18 @@ public class OrderProcessor {
                     .append("   razem: ").append(linePrice).append("\n");
         }
         sb.append("-----------------------------\n");
-        sb.append("DO ZAPLATY: ").append(order.getValue()).append("\n");
+        sb.append("Suma: ").append(order.getValue()).append("\n");
+        if (discount.compareTo(BigDecimal.ZERO) > 0) {
+            sb.append("Rabat: -").append(order.getValue().subtract(discountedValue(order, discount))).append("\n");
+        }
+        sb.append("DO ZAPLATY: ").append(discountedValue(order, discount)).append("\n");
         sb.append("=============================");
         return sb.toString();
+    }
+
+    private BigDecimal discountedValue(Order order, BigDecimal discount) {
+        return order.getValue()
+                .multiply(discount)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 }

@@ -4,6 +4,7 @@ target/
 !**/src/test/**/target/
 .kotlin
 orders.txt
+discounts.txt
 
 ### IntelliJ IDEA ###
 .idea/
