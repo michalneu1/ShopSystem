@@ -2,6 +2,8 @@ package org.example.order;
 
 import org.example.cart.CartItem;
 import org.example.model.Client;
+import org.example.model.Status;
+import org.example.model.StatusType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +17,7 @@ public class Order {
     private final BigDecimal value;
     private final Client client;
     private final LocalDateTime createdAt;
+    private Status status = new Status(StatusType.NEW, "Nowe zamówienie");
 
     public Order(List<CartItem> items, BigDecimal value, Client client) {
         this.id = COUNTER.getAndIncrement();
@@ -22,6 +25,17 @@ public class Order {
         this.value = value;
         this.client = client;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+    public void setStatus(StatusType type) {
+        this.status = new Status(type, null);
+    }
+
+    public void setStatus(StatusType type, String description) {
+        this.status = new Status(type, description);
     }
 
     public int getId() {

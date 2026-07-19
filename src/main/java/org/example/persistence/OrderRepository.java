@@ -14,7 +14,7 @@ public class OrderRepository {
     private final List<Order> orders = new ArrayList<>();
     private final Path file = Path.of("orders.txt");
 
-    public void save(Order order, String invoice) {
+    public synchronized void save(Order order, String invoice) {
         orders.add(order);
         try {
             Files.writeString(file, invoice + System.lineSeparator(),
