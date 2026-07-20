@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 
+/** Warehouse operations: adding products, finding them by ID and removing them from stock. */
 public class ProductManager {
 
     private final WareHouse wareHouse;

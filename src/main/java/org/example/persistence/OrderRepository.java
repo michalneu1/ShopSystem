@@ -10,10 +10,12 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Stores placed orders and appends invoices to the orders.txt file. */
 public class OrderRepository {
     private final List<Order> orders = new ArrayList<>();
     private final Path file = Path.of("orders.txt");
 
+    /** Saves the order and its invoice */
     public synchronized void save(Order order, String invoice) {
         orders.add(order);
         try {
