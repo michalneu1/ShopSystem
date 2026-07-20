@@ -6,6 +6,7 @@ import org.example.cli.ShopCLI;
 import org.example.model.*;
 import org.example.order.Order;
 import org.example.order.OrderProcessor;
+import org.example.persistence.OrderRepository;
 import org.example.warehouse.ProductManager;
 import org.example.warehouse.WareHouse;
 
@@ -62,7 +63,8 @@ public class Main {
 //
 //        System.out.println("\n=== Stan magazynu po zamowieniu ===");
 //        manager.showProducts();
-        ShopCLI cli = new ShopCLI(new OrderProcessor(manager));
+
+        ShopCLI cli = new ShopCLI(new OrderProcessor(manager, new OrderRepository()));
         cli.run();
     }
 }

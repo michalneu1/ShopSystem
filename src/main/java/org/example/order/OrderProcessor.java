@@ -2,6 +2,7 @@ package org.example.order;
 
 import org.example.cart.CartItem;
 import org.example.model.Config;
+import org.example.persistence.OrderRepository;
 import org.example.warehouse.ProductManager;
 
 import java.math.BigDecimal;
@@ -11,17 +12,21 @@ public class OrderProcessor {
     private static final DateTimeFormatter INVOICE_DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    ProductManager manager;
+    private final ProductManager manager;
+    private final OrderRepository repository;
 
     public ProductManager getManager() {
         return manager;
     }
 
-    public OrderProcessor(ProductManager manager) {
+    public OrderProcessor(ProductManager manager, OrderRepository repository) {
         this.manager = manager;
+        this.repository = repository;
     }
-
     public void processOrder(Order order) {
+        String invoice = generateInvoice(order);
+        System.out.println(invoice);
+        repository.save(order,invoice);
         for (CartItem item : order.getItems()) {
             manager.findByID(item.getProduct().getId()).ifPresent(itemInWarehouse -> {
                 manager.removeProductFromWareHouse(item.getProduct().getId(), item.getQuantity());
@@ -34,7 +39,6 @@ public class OrderProcessor {
                 }
             });
         }
-        System.out.println(generateInvoice(order));
     }
 
     public String generateInvoice(Order order) {
