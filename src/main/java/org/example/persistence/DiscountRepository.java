@@ -5,6 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * Reads discount codes from a text file in the {CODE;fraction} format.
+ */
 public class DiscountRepository {
     private final Path path;
 
@@ -12,6 +15,7 @@ public class DiscountRepository {
         this.path = path;
     }
 
+    /** Returns the price multiplier for a code */
     public BigDecimal getDiscount(String code) {
         try {
             List<String> lines = Files.readAllLines(path);

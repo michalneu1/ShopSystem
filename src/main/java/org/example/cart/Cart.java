@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/** Customer's cart: holds items before an order is placed, calculates the total. */
 public class Cart {
     private final List<CartItem> items = new ArrayList<>();
 
@@ -69,6 +70,7 @@ public class Cart {
         return amount;
     }
 
+    /** Creates an order from the cart contents and clears the cart */
     public Optional<Order> makeOrder(Client client) {
         if (items.isEmpty()) {
             throw new CartEmptyException();

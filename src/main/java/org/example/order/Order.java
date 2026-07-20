@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/** A placed order: cart items, price, client, status. ID is assigned automatically. */
 public class Order {
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
     private final int id;

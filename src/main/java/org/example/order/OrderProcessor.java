@@ -15,6 +15,10 @@ import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * Fulfills orders: checks stock levels, removes goods from the warehouse,
+ * sets the status and saves the invoice.
+ */
 public class OrderProcessor {
     private static final DateTimeFormatter INVOICE_DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -33,6 +37,10 @@ public class OrderProcessor {
         this.repository = repository;
     }
 
+    /**
+     * Processes the order under a lock, the invoice is generated
+     * and saved after the lock is released.
+     */
     public void processOrder(Order order, BigDecimal discount) {
         lock.lock();
         try {
@@ -84,6 +92,7 @@ public class OrderProcessor {
         }
     }
 
+    /** Builds the invoice text. */
     public String generateInvoice(Order order, BigDecimal discount) {
         StringBuilder sb = new StringBuilder();
         String title =

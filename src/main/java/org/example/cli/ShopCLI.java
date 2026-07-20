@@ -21,6 +21,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Shop interface. Reads user input only on the main thread.
+ */
 public class ShopCLI {
     private ProductManager manger;
     private OrderProcessor orderProcessor;
@@ -138,11 +141,11 @@ public class ShopCLI {
         System.out.println("Wpisz kod rabatowy (Enter = brak)");
         String code = scanner.nextLine().trim();
         if (code.isEmpty()) {
-            return BigDecimal.ZERO;
+            return BigDecimal.ONE;
         }
         BigDecimal discount = discountRepository.getDiscount(code);
-        if (discount.compareTo(BigDecimal.ZERO) == 0) {
-            System.out.println("Nieznany kod rabatowy - zamowienie bez rabatu");
+        if (discount.compareTo(BigDecimal.ONE) == 1) {
+            System.out.println("Nieznany kod rabatowy");
         }
         return discount;
     }
