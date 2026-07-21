@@ -50,7 +50,12 @@ public class Config {
 
     @Override
     public String toString() {
-        return type + ": " + name + " (+" + addValue + ")";
+        return "Config{" +
+                "name='" + name + '\'' +
+                ", addValue=" + addValue +
+                ", quantity=" + quantity +
+                ", type=" + type +
+                '}';
     }
 
     @Override

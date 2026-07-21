@@ -17,7 +17,7 @@ public class ProductManager {
         wareHouse.getProducts().add(product);
     }
 
-    public void removeFromWareHouse(int id, int quantity) {
+    public void removeProductFromWareHouse(int id, int quantity) {
         findByID(id).ifPresent(p -> p.setQuantity(p.getQuantity()-quantity));
     }
 

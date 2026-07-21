@@ -8,6 +8,8 @@ import java.util.Objects;
 
 public class CartItem {
     private final Product product;
+    private final List<Config> chosenConfigs;
+    private int quantity;
 
     public Product getProduct() {
         return product;
@@ -24,9 +26,6 @@ public class CartItem {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
-
-    private final List<Config> chosenConfigs;
-    private int quantity;
 
     public CartItem(Product product, List<Config> chosenConfigs, int quantity) {
         this.product = product;

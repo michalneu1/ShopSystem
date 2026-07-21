@@ -12,4 +12,25 @@ public class Client {
         this.age = age;
         this.mail = mail;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getMail() {
+        return mail;
+    }
+
+    public short getAge() {
+        return age;
+    }
+
+    @Override
+    public String toString() {
+        return name + " " + lastName + " <" + mail + ">";
+    }
 }
