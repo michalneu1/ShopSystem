@@ -24,4 +24,12 @@ public class Status {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    @Override
+    public String toString() {
+        return "Status{" +
+                "type=" + type +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }

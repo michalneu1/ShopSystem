@@ -37,11 +37,20 @@ public class OrderProcessor {
         this.repository = repository;
     }
 
-    /**
-     * Processes the order under a lock, the invoice is generated
-     * and saved after the lock is released.
-     */
-    public void processOrder(Order order, BigDecimal discount) {
+    public void printProcessResult(Order order){
+        if(order.getStatus().getType()==StatusType.ACCEPTED){
+            System.out.println("Zamowienie zlozone. Do zaplaty: " + discountedValue(order));
+        }else {
+            System.out.println(order.getStatus());
+        }
+    }
+
+    public void saveInvoice(Order order){
+        String invoice = generateInvoice(order);
+        repository.save(order, invoice);
+    }
+
+    public Order processOrder(Order order) {
         lock.lock();
         try {
             order.setStatus(StatusType.PENDING);
@@ -78,22 +87,20 @@ public class OrderProcessor {
                 });
             }
             order.setStatus(StatusType.ACCEPTED);
-            System.out.println("Zamowienie zlozone. Do zaplaty: " + discountedValue(order, discount));
         } catch (InsufficientStockException e) {
             order.setStatus(StatusType.REJECTED, e.getMessage());
-            throw e;
         } catch (Exception e) {
             order.setStatus(StatusType.ERROR, e.getMessage());
-            throw e;
         } finally {
             lock.unlock();
-            String invoice = generateInvoice(order, discount);
-            repository.save(order, invoice);
         }
+        return order;
     }
 
-    /** Builds the invoice text. */
-    public String generateInvoice(Order order, BigDecimal discount) {
+    /**
+     * Builds the invoice text.
+     */
+    public String generateInvoice(Order order) {
         StringBuilder sb = new StringBuilder();
         String title =
                 switch (order.getStatus().getType()) {
@@ -109,31 +116,30 @@ public class OrderProcessor {
         sb.append("Klient: ").append(order.getClient()).append("\n");
         sb.append("-----------------------------\n");
         for (CartItem item : order.getItems()) {
-            BigDecimal unitPrice = item.getProduct().getValue();
+            BigDecimal linePrice = item.getProduct().getValue()
+                    .multiply(BigDecimal.valueOf(item.getQuantity()));
+            sb.append(item.getProduct().getName()).append(" x").append(item.getQuantity())
+                    .append("   cena jedn.: ").append(item.getProduct().getValue()).append("\n");
             for (Config chosenConfig : item.getChosenConfigs()) {
-                unitPrice = unitPrice.add(chosenConfig.getAddValue());
-            }
-            BigDecimal linePrice = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
-            sb.append(item.getProduct().getName()).append(" x").append(item.getQuantity()).append("\n");
-            for (Config chosenConfig : item.getChosenConfigs()) {
+                linePrice = linePrice.add(chosenConfig.getAddValue()
+                        .multiply(BigDecimal.valueOf(chosenConfig.getQuantity())));
                 sb.append("    + ").append(chosenConfig).append("\n");
             }
-            sb.append("    cena jedn.: ").append(unitPrice)
-                    .append("   razem: ").append(linePrice).append("\n");
+            sb.append("    razem: ").append(linePrice).append("\n");
         }
         sb.append("-----------------------------\n");
         sb.append("Suma: ").append(order.getValue()).append("\n");
-        if (discount.compareTo(BigDecimal.ZERO) > 0) {
-            sb.append("Rabat: -").append(order.getValue().subtract(discountedValue(order, discount))).append("\n");
+        if (order.getDiscount().compareTo(BigDecimal.ZERO) > 0) {
+            sb.append("Rabat: -").append(order.getValue().subtract(discountedValue(order))).append("\n");
         }
-        sb.append("DO ZAPLATY: ").append(discountedValue(order, discount)).append("\n");
+        sb.append("DO ZAPLATY: ").append(discountedValue(order)).append("\n");
         sb.append("=============================");
         return sb.toString();
     }
 
-    private BigDecimal discountedValue(Order order, BigDecimal discount) {
+    private BigDecimal discountedValue(Order order) {
         return order.getValue()
-                .multiply(discount)
+                .multiply(order.getDiscount())
                 .setScale(2, RoundingMode.HALF_UP);
     }
 }
