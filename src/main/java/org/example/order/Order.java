@@ -6,7 +6,9 @@ import org.example.model.Status;
 import org.example.model.StatusType;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,7 +21,7 @@ public class Order {
     private final List<CartItem> items;
     private final BigDecimal value;
     private final Client client;
-    private final LocalDateTime createdAt;
+    private final Instant createdAt;
     private Status status;
     private final BigDecimal discount;
 
@@ -28,7 +30,7 @@ public class Order {
         this.items = items;
         this.value = value;
         this.client = client;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
         this.status = new Status(StatusType.NEW, "Nowe zamówienie");
         this.discount = discount;
     }
@@ -65,7 +67,7 @@ public class Order {
         return client;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
