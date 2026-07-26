@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -111,7 +112,7 @@ public class ShopCLI {
                     Config original = choosedProduct.getConfigs().get(Integer.parseInt(s.trim()));
                     System.out.println(original);
                     System.out.println("Podaj ilość");
-                    choosedConfigs.add(new Config(original, getChoice()));
+                    choosedConfigs.add(new Config(original, choosedQuantity*getChoice()));
                 } catch (NumberFormatException | IndexOutOfBoundsException e) {
                     System.out.println("Pomijam niepoprawną konfigurację: " + s);
                 }
@@ -126,15 +127,16 @@ public class ShopCLI {
             System.out.println("Koszyk jest pusty.");
             return;
         }
-        Optional<Order> order = cart.makeOrder(readClient());
-        BigDecimal discount = getDiscount();
-        order.ifPresent(o -> pool.submit(() -> {
-            try {
-                orderProcessor.processOrder(o,discount);
-            } catch (Exception e) {
-                System.out.println("Błąd: " + e.getMessage());
-            }
-        }));
+        Optional<Order> order = cart.makeOrder(readClient(),getDiscount());
+        order.ifPresent((o)->CompletableFuture.supplyAsync
+                (()->orderProcessor.processOrder(o),pool)
+                .thenAccept(processed ->{
+                    orderProcessor.printProcessResult(processed);
+                    orderProcessor.saveInvoice(processed);
+                }).exceptionally(ex->{
+                    System.out.println(ex.getCause().getMessage());
+                    return null;
+                }));
     }
 
     private BigDecimal getDiscount() {

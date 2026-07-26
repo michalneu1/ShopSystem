@@ -2,12 +2,9 @@ package org.example.cart;
 
 import org.example.exception.CartEmptyException;
 import org.example.exception.IllegalConfigurationException;
-import org.example.exception.InsufficientStockException;
 import org.example.model.Client;
 import org.example.model.Config;
-import org.example.model.Product;
 import org.example.order.Order;
-import org.example.warehouse.ProductManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -21,7 +18,7 @@ public class Cart {
     public void addToCart(CartItem item) {
         for (Config chosen : item.getChosenConfigs()) {
             if (!item.getProduct().getConfigs().contains(chosen)) {
-                throw new IllegalConfigurationException("Nie dodano do koszyka - konfiguracja \"" + chosen
+                throw new IllegalConfigurationException("Nie dodano do koszyka konfiguracja \"" + chosen
                         + "\" nie jest dostepna dla produktu: " + item.getProduct().getName());
             }
         }
@@ -61,21 +58,23 @@ public class Cart {
     public BigDecimal getTotal() {
         BigDecimal amount = BigDecimal.ZERO;
         for (CartItem item : items) {
-            BigDecimal itemPrice = item.getProduct().getValue();
+            BigDecimal itemPrice = item.getProduct().getValue()
+                    .multiply(BigDecimal.valueOf(item.getQuantity()));
             for (Config chosenConfig : item.getChosenConfigs()) {
-                itemPrice = itemPrice.add(chosenConfig.getAddValue());
+                itemPrice = itemPrice.add(chosenConfig.getAddValue()
+                        .multiply(BigDecimal.valueOf(chosenConfig.getQuantity())));
             }
-            amount = amount.add(itemPrice.multiply(BigDecimal.valueOf(item.getQuantity())));
+            amount = amount.add(itemPrice);
         }
         return amount;
     }
 
     /** Creates an order from the cart contents and clears the cart */
-    public Optional<Order> makeOrder(Client client) {
+    public Optional<Order> makeOrder(Client client,BigDecimal discount) {
         if (items.isEmpty()) {
             throw new CartEmptyException();
         }
-        Optional<Order> order = Optional.of(new Order(new ArrayList<>(items), getTotal(), client));
+        Optional<Order> order = Optional.of(new Order(new ArrayList<>(items), getTotal(), client, discount));
         items.clear();
         return order;
     }

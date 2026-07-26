@@ -10,7 +10,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** A placed order: cart items, price, client, status. ID is assigned automatically. */
+/**
+ * A placed order: cart items, price, client, status. ID is assigned automatically.
+ */
 public class Order {
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
     private final int id;
@@ -18,19 +20,27 @@ public class Order {
     private final BigDecimal value;
     private final Client client;
     private final LocalDateTime createdAt;
-    private Status status = new Status(StatusType.NEW, "Nowe zamówienie");
+    private Status status;
+    private final BigDecimal discount;
 
-    public Order(List<CartItem> items, BigDecimal value, Client client) {
+    public Order(List<CartItem> items, BigDecimal value, Client client, BigDecimal discount) {
         this.id = COUNTER.getAndIncrement();
         this.items = items;
         this.value = value;
         this.client = client;
         this.createdAt = LocalDateTime.now();
+        this.status = new Status(StatusType.NEW, "Nowe zamówienie");
+        this.discount = discount;
+    }
+
+    public BigDecimal getDiscount() {
+        return discount;
     }
 
     public Status getStatus() {
         return status;
     }
+
     public void setStatus(StatusType type) {
         this.status = new Status(type, null);
     }
