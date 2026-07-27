@@ -51,7 +51,7 @@ public class Config {
 
     public void setQuantity(int quantity) {
         if(quantity<0){
-            throw new IllegalArgumentException("Wartość ilości nie może być mniejsza od 0");
+            throw new IllegalArgumentException("Ilość nie może być mniejsza od 0");
         }
         this.quantity = quantity;
     }

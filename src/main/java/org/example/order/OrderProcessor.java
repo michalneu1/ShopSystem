@@ -132,7 +132,7 @@ public class OrderProcessor {
         }
         sb.append("-----------------------------\n");
         sb.append("Suma: ").append(order.getValue()).append("\n");
-        if (order.getDiscount().compareTo(BigDecimal.ZERO) > 0) {
+        if (order.getDiscount().compareTo(BigDecimal.ONE) == 1) {
             sb.append("Rabat: -").append(order.getValue().subtract(discountedValue(order))).append("\n");
         }
         sb.append("DO ZAPLATY: ").append(discountedValue(order)).append("\n");

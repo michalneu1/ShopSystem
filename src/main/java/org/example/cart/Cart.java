@@ -26,6 +26,12 @@ public class Cart {
         for (CartItem existing : items) {
             if (existing.equals(item)) {
                 existing.setQuantity(existing.getQuantity() + item.getQuantity());
+                List<Config> existingConfigs = existing.getChosenConfigs();
+                List<Config> addedConfigs = item.getChosenConfigs();
+                for (int i = 0; i < existingConfigs.size(); i++) {
+                    Config target = existingConfigs.get(i);
+                    target.setQuantity(target.getQuantity() + addedConfigs.get(i).getQuantity());
+                }
                 return;
             }
         }
