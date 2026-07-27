@@ -10,6 +10,8 @@ import org.example.warehouse.ProductManager;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
@@ -112,7 +114,8 @@ public class OrderProcessor {
 
         sb.append(title);
         sb.append("Nr zamowienia: ").append(order.getId()).append("\n");
-        sb.append("Data zlozenia: ").append(order.getCreatedAt().format(INVOICE_DATE_FORMAT)).append("\n");
+        sb.append("Data zlozenia: ").append(LocalDateTime.ofInstant(order.getCreatedAt(),
+                ZoneId.systemDefault()).format(INVOICE_DATE_FORMAT)).append("\n");
         sb.append("Klient: ").append(order.getClient()).append("\n");
         sb.append("-----------------------------\n");
         for (CartItem item : order.getItems()) {
@@ -129,7 +132,7 @@ public class OrderProcessor {
         }
         sb.append("-----------------------------\n");
         sb.append("Suma: ").append(order.getValue()).append("\n");
-        if (order.getDiscount().compareTo(BigDecimal.ZERO) > 0) {
+        if (order.getDiscount().compareTo(BigDecimal.ONE) == 1) {
             sb.append("Rabat: -").append(order.getValue().subtract(discountedValue(order))).append("\n");
         }
         sb.append("DO ZAPLATY: ").append(discountedValue(order)).append("\n");
