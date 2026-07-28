@@ -16,12 +16,6 @@ public class Config {
         this.quantity = quantity;
     }
 
-    public Config(Config other) {
-        this.name = other.name;
-        this.addValue = other.addValue;
-        this.type = other.type;
-        this.quantity = other.quantity;
-    }
     public Config(Config other, int quantity) {
         this.name = other.name;
         this.addValue = other.addValue;
@@ -33,16 +27,8 @@ public class Config {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public BigDecimal getAddValue() {
         return addValue;
-    }
-
-    public void setAddValue(BigDecimal addValue) {
-        this.addValue = addValue;
     }
 
     public int getQuantity() {
@@ -54,14 +40,6 @@ public class Config {
             throw new IllegalArgumentException("Ilość nie może być mniejsza od 0");
         }
         this.quantity = quantity;
-    }
-
-    public ConfigType getType() {
-        return type;
-    }
-
-    public void setType(ConfigType type) {
-        this.type = type;
     }
 
     @Override

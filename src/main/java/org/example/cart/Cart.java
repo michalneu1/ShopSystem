@@ -38,14 +38,6 @@ public class Cart {
         items.add(item);
     }
 
-    public void removeFromCart(CartItem item) {
-        items.remove(item);
-    }
-
-    public List<CartItem> getItems() {
-        return items;
-    }
-
     public boolean isEmpty() {
         return items.isEmpty();
     }

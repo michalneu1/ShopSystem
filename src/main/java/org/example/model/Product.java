@@ -49,17 +49,8 @@ public class Product {
         return type;
     }
 
-    public void setType(ProductType type) {
-        this.type = type;
-    }
-
     public List<Config> getConfigs() {
         return configs;
-    }
-
-    public void setConfigs(List<Config> configs) {
-
-        this.configs = configs;
     }
 
     public int getQuantity() {

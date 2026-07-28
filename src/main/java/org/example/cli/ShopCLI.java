@@ -85,14 +85,17 @@ public class ShopCLI {
         System.out.println("6. wyjdź");
     }
 
+    private Product getProduct(int choice){
+        return manger.findByID(choice).orElseThrow(() -> new ProductNotFoundException(choice));
+    }
+
     private void addProductToCart() {
         manger.showProducts();
         System.out.println("Podaj id produktu");
         int choice = getChoice();
         System.out.println("Podaj ilość");
         int choosedQuantity = getChoice();
-        Product choosedProduct = manger.findByID(choice)
-                .orElseThrow(() -> new ProductNotFoundException(choice));
+        Product choosedProduct = getProduct(choice);
         int counter = 0;
         for (Config config : choosedProduct.getConfigs()) {
             System.out.println(counter + " " + config);
