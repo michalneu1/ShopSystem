@@ -52,30 +52,34 @@ public class OrderProcessor {
         repository.save(order, invoice);
     }
 
+    private void validateOrder(Order order){
+        for (CartItem item : order.getItems()) {
+            Optional<Product> inStock = manager.findByID(item.getProduct().getId());
+            if (inStock.isEmpty()) {
+                throw new InsufficientStockException(item.getProduct().getName(), item.getQuantity());
+            }
+            if (inStock.get().getQuantity() < item.getQuantity()) {
+                throw new InsufficientStockException(
+                        item.getProduct().getName(), item.getQuantity(), inStock.get().getQuantity());
+            }
+            for (Config chosen : item.getChosenConfigs()) {
+                Optional<Config> stockConfig = inStock.get().getConfigs().stream()
+                        .filter(c -> c.equals(chosen)).findFirst();
+                if (stockConfig.isEmpty()) {
+                    throw new InsufficientStockException(chosen.getName(), chosen.getQuantity());
+                }
+                if (stockConfig.get().getQuantity() < chosen.getQuantity()) {
+                    throw new InsufficientStockException(chosen.getName(), chosen.getQuantity(), stockConfig.get().getQuantity());
+                }
+            }
+        }
+    }
+
     public Order processOrder(Order order) {
         lock.lock();
         try {
             order.setStatus(StatusType.PENDING);
-            for (CartItem item : order.getItems()) {
-                Optional<Product> inStock = manager.findByID(item.getProduct().getId());
-                if (inStock.isEmpty()) {
-                    throw new InsufficientStockException(item.getProduct().getName(), item.getQuantity());
-                }
-                if (inStock.get().getQuantity() < item.getQuantity()) {
-                    throw new InsufficientStockException(
-                            item.getProduct().getName(), item.getQuantity(), inStock.get().getQuantity());
-                }
-                for (Config chosen : item.getChosenConfigs()) {
-                    Optional<Config> stockConfig = inStock.get().getConfigs().stream()
-                            .filter(c -> c.equals(chosen)).findFirst();
-                    if (stockConfig.isEmpty()) {
-                        throw new InsufficientStockException(chosen.getName(), chosen.getQuantity());
-                    }
-                    if (stockConfig.get().getQuantity() < chosen.getQuantity()) {
-                        throw new InsufficientStockException(chosen.getName(), chosen.getQuantity(), stockConfig.get().getQuantity());
-                    }
-                }
-            }
+            validateOrder(order);
             for (CartItem item : order.getItems()) {
                 manager.findByID(item.getProduct().getId()).ifPresent(itemInWarehouse -> {
                     manager.removeProductFromWareHouse(item.getProduct().getId(), item.getQuantity());

@@ -22,7 +22,7 @@ public class OrderRepository {
             Files.writeString(file, invoice + System.lineSeparator(),
                     StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
-            throw new PersistenceException("Nie udalo sie zapisac zamowienia nr " + order.getId(), e);
+            throw new PersistenceException("Nie udalo sie zapisac zamowienia nr " + order.getId());
         }
     }
 }
