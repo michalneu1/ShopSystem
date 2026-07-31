@@ -32,6 +32,13 @@ public class ShopCLI {
     private Cart cart;
     private ExecutorService pool = Executors.newFixedThreadPool(4);
     private final DiscountRepository discountRepository = new DiscountRepository(Path.of("discounts.txt"));
+    private final int SHOWPRODUCTS = 1;
+    private final int ADDPRODUCTS = 2;
+    private final int SHOWCART = 3;
+    private final int PLACEORDER = 4;
+    private final int CLEARCART = 5;
+    private final int END = 6;
+    private final int TIMEOUT = 10;
 
     public ShopCLI(OrderProcessor orderProcessor) {
         this.manger = orderProcessor.getManager();
@@ -47,15 +54,15 @@ public class ShopCLI {
             System.out.println("Podaj odpowiedź");
             try {
                 switch (getChoice()) {
-                    case 1 -> manger.showProducts();
-                    case 2 -> addProductToCart();
-                    case 3 -> cart.showCart();
-                    case 4 -> placeOrder();
-                    case 5 -> cart = new Cart();
-                    case 6 -> {
+                    case SHOWPRODUCTS -> manger.showProducts();
+                    case ADDPRODUCTS -> addProductToCart();
+                    case SHOWCART -> cart.showCart();
+                    case PLACEORDER -> placeOrder();
+                    case CLEARCART -> cart = new Cart();
+                    case END -> {
                         running = false;
                         pool.shutdown();
-                        pool.awaitTermination(10, TimeUnit.SECONDS);
+                        pool.awaitTermination(TIMEOUT, TimeUnit.SECONDS);
                     }
                     default -> System.out.println("Nieznana opcja");
                 }
@@ -77,15 +84,15 @@ public class ShopCLI {
     }
 
     private void showMenu() {
-        System.out.println("1. Przeglądaj produkty");
-        System.out.println("2. Dodaj produkt do koszyka");
-        System.out.println("3. Sprawdż koszyk");
-        System.out.println("4. Złóż zamówienie");
-        System.out.println("5. Wyczyść koszyk");
-        System.out.println("6. wyjdź");
+        System.out.println(SHOWPRODUCTS + ". Przeglądaj produkty");
+        System.out.println(ADDPRODUCTS + ". Dodaj produkt do koszyka");
+        System.out.println(SHOWCART + ". Sprawdż koszyk");
+        System.out.println(PLACEORDER + ". Złóż zamówienie");
+        System.out.println(CLEARCART + ". Wyczyść koszyk");
+        System.out.println(END + ". wyjdź");
     }
 
-    private Product getProduct(int choice){
+    private Product getProduct(int choice) {
         return manger.findByID(choice).orElseThrow(() -> new ProductNotFoundException(choice));
     }
 
@@ -115,7 +122,7 @@ public class ShopCLI {
                     Config original = choosedProduct.getConfigs().get(Integer.parseInt(s.trim()));
                     System.out.println(original);
                     System.out.println("Podaj ilość");
-                    choosedConfigs.add(new Config(original, choosedQuantity*getChoice()));
+                    choosedConfigs.add(new Config(original, choosedQuantity * getChoice()));
                 } catch (NumberFormatException | IndexOutOfBoundsException e) {
                     System.out.println("Pomijam niepoprawną konfigurację: " + s);
                 }
@@ -130,13 +137,13 @@ public class ShopCLI {
             System.out.println("Koszyk jest pusty.");
             return;
         }
-        Optional<Order> order = cart.makeOrder(readClient(),getDiscount());
-        order.ifPresent((o)->CompletableFuture.supplyAsync
-                (()->orderProcessor.processOrder(o),pool)
-                .thenAccept(processed ->{
+        Optional<Order> order = cart.makeOrder(readClient(), getDiscount());
+        order.ifPresent((o) -> CompletableFuture.supplyAsync
+                        (() -> orderProcessor.processOrder(o), pool)
+                .thenAccept(processed -> {
                     orderProcessor.printProcessResult(processed);
                     orderProcessor.saveInvoice(processed);
-                }).exceptionally(ex->{
+                }).exceptionally(ex -> {
                     System.out.println(ex.getCause().getMessage());
                     return null;
                 }));

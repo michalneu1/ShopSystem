@@ -1,10 +1,7 @@
 package org.example;
-
-import org.example.cart.Cart;
-import org.example.cart.CartItem;
 import org.example.cli.ShopCLI;
 import org.example.model.*;
-import org.example.order.Order;
+
 import org.example.order.OrderProcessor;
 import org.example.persistence.OrderRepository;
 import org.example.warehouse.ProductManager;
@@ -13,7 +10,7 @@ import org.example.warehouse.WareHouse;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
 
 public class Main {
     public static void main(String[] args) {
@@ -44,5 +41,6 @@ public class Main {
 
         ShopCLI cli = new ShopCLI(new OrderProcessor(manager, new OrderRepository()));
         cli.run();
+
     }
 }
