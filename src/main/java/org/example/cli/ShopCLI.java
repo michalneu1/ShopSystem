@@ -1,0 +1,177 @@
+package org.example.cli;
+
+import org.example.cart.Cart;
+import org.example.cart.CartItem;
+import org.example.exception.ProductNotFoundException;
+import org.example.model.Client;
+import org.example.model.Config;
+import org.example.model.Product;
+import org.example.model.ProductType;
+import org.example.order.Order;
+import org.example.order.OrderProcessor;
+import org.example.persistence.DiscountRepository;
+import org.example.warehouse.ProductManager;
+
+import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Shop interface. Reads user input only on the main thread.
+ */
+public class ShopCLI {
+    private ProductManager manger;
+    private OrderProcessor orderProcessor;
+    private Scanner scanner;
+    private Cart cart;
+    private ExecutorService pool = Executors.newFixedThreadPool(4);
+    private final DiscountRepository discountRepository = new DiscountRepository(Path.of("discounts.txt"));
+    private final int SHOWPRODUCTS = 1;
+    private final int ADDPRODUCTS = 2;
+    private final int SHOWCART = 3;
+    private final int PLACEORDER = 4;
+    private final int CLEARCART = 5;
+    private final int END = 6;
+    private final int TIMEOUT = 10;
+
+    public ShopCLI(OrderProcessor orderProcessor) {
+        this.manger = orderProcessor.getManager();
+        this.orderProcessor = orderProcessor;
+        this.scanner = new Scanner(System.in);
+        cart = new Cart();
+    }
+
+    public void run() {
+        boolean running = true;
+        while (running) {
+            showMenu();
+            System.out.println("Podaj odpowiedź");
+            try {
+                switch (getChoice()) {
+                    case SHOWPRODUCTS -> manger.showProducts();
+                    case ADDPRODUCTS -> addProductToCart();
+                    case SHOWCART -> cart.showCart();
+                    case PLACEORDER -> placeOrder();
+                    case CLEARCART -> cart = new Cart();
+                    case END -> {
+                        running = false;
+                        pool.shutdown();
+                        pool.awaitTermination(TIMEOUT, TimeUnit.SECONDS);
+                    }
+                    default -> System.out.println("Nieznana opcja");
+                }
+            } catch (Exception e) {
+                System.out.println("Błąd: " + e.getMessage());
+            }
+        }
+        System.out.println("Do widzenia!");
+    }
+
+    private int getChoice() {
+        while (true) {
+            try {
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Podana wartość nie jest poprawna");
+            }
+        }
+    }
+
+    private void showMenu() {
+        System.out.println(SHOWPRODUCTS + ". Przeglądaj produkty");
+        System.out.println(ADDPRODUCTS + ". Dodaj produkt do koszyka");
+        System.out.println(SHOWCART + ". Sprawdż koszyk");
+        System.out.println(PLACEORDER + ". Złóż zamówienie");
+        System.out.println(CLEARCART + ". Wyczyść koszyk");
+        System.out.println(END + ". wyjdź");
+    }
+
+    private Product getProduct(int choice) {
+        return manger.findByID(choice).orElseThrow(() -> new ProductNotFoundException(choice));
+    }
+
+    private void addProductToCart() {
+        manger.showProducts();
+        System.out.println("Podaj id produktu");
+        int choice = getChoice();
+        System.out.println("Podaj ilość");
+        int choosedQuantity = getChoice();
+        Product choosedProduct = getProduct(choice);
+        int counter = 0;
+        for (Config config : choosedProduct.getConfigs()) {
+            System.out.println(counter + " " + config);
+            counter++;
+        }
+        if (choosedProduct.getType() == ProductType.Electronics) {
+            cart.addToCart(new CartItem(choosedProduct, choosedQuantity));
+            System.out.println("Dodano do koszyka.");
+            return;
+        }
+        System.out.println("Podaj wybrane konfiguracje po przecinku np: (0,1,2) lub Enter aby pominąć");
+        ArrayList<Config> choosedConfigs = new ArrayList<>();
+        String line = scanner.nextLine().trim();
+        if (!line.isEmpty()) {
+            for (String s : line.split(",")) {
+                try {
+                    Config original = choosedProduct.getConfigs().get(Integer.parseInt(s.trim()));
+                    System.out.println(original);
+                    System.out.println("Podaj ilość");
+                    choosedConfigs.add(new Config(original, choosedQuantity * getChoice()));
+                } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                    System.out.println("Pomijam niepoprawną konfigurację: " + s);
+                }
+            }
+        }
+        cart.addToCart(new CartItem(choosedProduct, choosedConfigs, choosedQuantity));
+        System.out.println("Dodano do koszyka.");
+    }
+
+    private void placeOrder() {
+        if (cart.isEmpty()) {
+            System.out.println("Koszyk jest pusty.");
+            return;
+        }
+        Optional<Order> order = cart.makeOrder(readClient(), getDiscount());
+        order.ifPresent((o) -> CompletableFuture.supplyAsync
+                        (() -> orderProcessor.processOrder(o), pool)
+                .thenAccept(processed -> {
+                    orderProcessor.printProcessResult(processed);
+                    orderProcessor.saveInvoice(processed);
+                }).exceptionally(ex -> {
+                    System.out.println(ex.getCause().getMessage());
+                    return null;
+                }));
+    }
+
+    private BigDecimal getDiscount() {
+        System.out.println("Wpisz kod rabatowy (Enter = brak)");
+        String code = scanner.nextLine().trim();
+        if (code.isEmpty()) {
+            return BigDecimal.ONE;
+        }
+        BigDecimal discount = discountRepository.getDiscount(code);
+        if (discount.compareTo(BigDecimal.ONE) == 1) {
+            System.out.println("Nieznany kod rabatowy");
+        }
+        return discount;
+    }
+
+    private Client readClient() {
+        System.out.println("Podaj imię");
+        String name = scanner.nextLine().trim();
+        System.out.println("Podaj nazwisko");
+        String lastName = scanner.nextLine().trim();
+        System.out.println("Podaj wiek");
+        short age = (short) getChoice();
+        System.out.println("Podaj email");
+        String mail = scanner.nextLine().trim();
+        return new Client(name, lastName, age, mail);
+    }
+
+}
