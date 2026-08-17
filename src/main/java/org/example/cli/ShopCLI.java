@@ -14,7 +14,8 @@ import org.example.warehouse.ProductManager;
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
@@ -103,33 +104,44 @@ public class ShopCLI {
         System.out.println("Podaj ilość");
         int choosedQuantity = getChoice();
         Product choosedProduct = getProduct(choice);
+        showConfigs(choosedProduct);
+        cart.addToCart(new CartItem(choosedProduct, readConfigs(choosedProduct), choosedQuantity));
+        System.out.println("Dodano do koszyka.");
+    }
+
+    private void showConfigs(Product product) {
         int counter = 0;
-        for (Config config : choosedProduct.getConfigs()) {
+        for (Config config : product.getConfigs()) {
             System.out.println(counter + " " + config);
             counter++;
         }
-        if (choosedProduct.getType() == ProductType.Electronics) {
-            cart.addToCart(new CartItem(choosedProduct, choosedQuantity));
-            System.out.println("Dodano do koszyka.");
-            return;
+    }
+
+    private Map<Config, Integer> readConfigs(Product product) {
+        Map<Config, Integer> choosedConfigs = new LinkedHashMap<>();
+        if (product.getType() == ProductType.Electronics) {
+            return choosedConfigs;
         }
         System.out.println("Podaj wybrane konfiguracje po przecinku np: (0,1,2) lub Enter aby pominąć");
-        ArrayList<Config> choosedConfigs = new ArrayList<>();
         String line = scanner.nextLine().trim();
-        if (!line.isEmpty()) {
-            for (String s : line.split(",")) {
-                try {
-                    Config original = choosedProduct.getConfigs().get(Integer.parseInt(s.trim()));
-                    System.out.println(original);
-                    System.out.println("Podaj ilość");
-                    choosedConfigs.add(new Config(original, choosedQuantity * getChoice()));
-                } catch (NumberFormatException | IndexOutOfBoundsException e) {
-                    System.out.println("Pomijam niepoprawną konfigurację: " + s);
-                }
-            }
+        if (line.isEmpty()) {
+            return choosedConfigs;
         }
-        cart.addToCart(new CartItem(choosedProduct, choosedConfigs, choosedQuantity));
-        System.out.println("Dodano do koszyka.");
+        for (String s : line.split(",")) {
+            readSingleConfig(product, s, choosedConfigs);
+        }
+        return choosedConfigs;
+    }
+
+    private void readSingleConfig(Product product, String token, Map<Config, Integer> choosedConfigs) {
+        try {
+            Config original = product.getConfigs().get(Integer.parseInt(token.trim()));
+            System.out.println(original);
+            System.out.println("Podaj ilość (na sztukę)");
+            choosedConfigs.merge(original, getChoice(), Integer::sum);
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            System.out.println("Pomijam niepoprawną konfigurację: " + token);
+        }
     }
 
     private void placeOrder() {

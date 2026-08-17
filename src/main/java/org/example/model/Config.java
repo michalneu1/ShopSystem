@@ -1,26 +1,20 @@
 package org.example.model;
 
 import java.math.BigDecimal;
-import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Config {
+    private static final AtomicInteger COUNTER = new AtomicInteger(1);
     private String name;
     private BigDecimal addValue;
-    private int quantity;
     private ConfigType type;
+    private final int id;
 
-    public Config(String name, BigDecimal addValue, ConfigType type, int quantity) {
+    public Config(String name, BigDecimal addValue, ConfigType type) {
         this.name = name;
         this.addValue = addValue;
         this.type = type;
-        this.quantity = quantity;
-    }
-
-    public Config(Config other, int quantity) {
-        this.name = other.name;
-        this.addValue = other.addValue;
-        this.type = other.type;
-        this.quantity = quantity;
+        this.id = COUNTER.getAndIncrement();
     }
 
     public String getName() {
@@ -31,15 +25,8 @@ public class Config {
         return addValue;
     }
 
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        if(quantity<0){
-            throw new IllegalArgumentException("Ilość nie może być mniejsza od 0");
-        }
-        this.quantity = quantity;
+    public int getId() {
+        return id;
     }
 
     @Override
@@ -47,7 +34,6 @@ public class Config {
         return " Config{" +
                 "name='" + name + '\'' +
                 ", addValue=" + addValue +
-                ", quantity=" + quantity +
                 ", type=" + type +
                 '}';
     }
@@ -56,11 +42,11 @@ public class Config {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Config config = (Config) o;
-        return Objects.equals(name, config.name) && Objects.equals(addValue, config.addValue) && type == config.type;
+        return id == config.id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, addValue, type);
+        return Integer.hashCode(id);
     }
 }

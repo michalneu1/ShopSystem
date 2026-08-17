@@ -3,7 +3,6 @@ package org.example.order;
 import org.example.cart.CartItem;
 import org.example.exception.InsufficientStockException;
 import org.example.model.Config;
-import org.example.model.Product;
 import org.example.model.StatusType;
 import org.example.persistence.OrderRepository;
 import org.example.warehouse.ProductManager;
@@ -13,7 +12,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -27,6 +26,7 @@ public class OrderProcessor {
 
     private final ProductManager manager;
     private final OrderRepository repository;
+    private final OrderValidator validator;
     private final Lock lock = new ReentrantLock();
 
 
@@ -37,6 +37,7 @@ public class OrderProcessor {
     public OrderProcessor(ProductManager manager, OrderRepository repository) {
         this.manager = manager;
         this.repository = repository;
+        this.validator = new OrderValidator(manager);
     }
 
     public void printProcessResult(Order order){
@@ -52,46 +53,12 @@ public class OrderProcessor {
         repository.save(order, invoice);
     }
 
-    private void validateOrder(Order order){
-        for (CartItem item : order.getItems()) {
-            Optional<Product> inStock = manager.findByID(item.getProduct().getId());
-            if (inStock.isEmpty()) {
-                throw new InsufficientStockException(item.getProduct().getName(), item.getQuantity());
-            }
-            if (inStock.get().getQuantity() < item.getQuantity()) {
-                throw new InsufficientStockException(
-                        item.getProduct().getName(), item.getQuantity(), inStock.get().getQuantity());
-            }
-            for (Config chosen : item.getChosenConfigs()) {
-                Optional<Config> stockConfig = inStock.get().getConfigs().stream()
-                        .filter(c -> c.equals(chosen)).findFirst();
-                if (stockConfig.isEmpty()) {
-                    throw new InsufficientStockException(chosen.getName(), chosen.getQuantity());
-                }
-                if (stockConfig.get().getQuantity() < chosen.getQuantity()) {
-                    throw new InsufficientStockException(chosen.getName(), chosen.getQuantity(), stockConfig.get().getQuantity());
-                }
-            }
-        }
-    }
-
     public Order processOrder(Order order) {
         lock.lock();
         try {
             order.setStatus(StatusType.PENDING);
-            validateOrder(order);
-            for (CartItem item : order.getItems()) {
-                manager.findByID(item.getProduct().getId()).ifPresent(itemInWarehouse -> {
-                    manager.removeProductFromWareHouse(item.getProduct().getId(), item.getQuantity());
-                    for (Config config : itemInWarehouse.getConfigs()) {
-                        for (Config chosenConfig : item.getChosenConfigs()) {
-                            if (chosenConfig.equals(config)) {
-                                config.setQuantity(config.getQuantity() - chosenConfig.getQuantity());
-                            }
-                        }
-                    }
-                });
-            }
+            validator.validate(order);
+            order.getItems().forEach(this::removeFromWarehouse);
             order.setStatus(StatusType.ACCEPTED);
         } catch (InsufficientStockException e) {
             order.setStatus(StatusType.REJECTED, e.getMessage());
@@ -101,6 +68,13 @@ public class OrderProcessor {
             lock.unlock();
         }
         return order;
+    }
+
+    private void removeFromWarehouse(CartItem item) {
+        int productId = item.getProduct().getId();
+        manager.removeProductFromWareHouse(productId, item.getQuantity());
+        item.getChosenConfigs().forEach((config, perUnit) ->
+                manager.removeConfigFromWareHouse(productId, config, perUnit * item.getQuantity()));
     }
 
     /**
@@ -123,16 +97,7 @@ public class OrderProcessor {
         sb.append("Klient: ").append(order.getClient()).append("\n");
         sb.append("-----------------------------\n");
         for (CartItem item : order.getItems()) {
-            BigDecimal linePrice = item.getProduct().getValue()
-                    .multiply(BigDecimal.valueOf(item.getQuantity()));
-            sb.append(item.getProduct().getName()).append(" x").append(item.getQuantity())
-                    .append("   cena jedn.: ").append(item.getProduct().getValue()).append("\n");
-            for (Config chosenConfig : item.getChosenConfigs()) {
-                linePrice = linePrice.add(chosenConfig.getAddValue()
-                        .multiply(BigDecimal.valueOf(chosenConfig.getQuantity())));
-                sb.append("    + ").append(chosenConfig).append("\n");
-            }
-            sb.append("    razem: ").append(linePrice).append("\n");
+            appendInvoiceItem(sb, item);
         }
         sb.append("-----------------------------\n");
         sb.append("Suma: ").append(order.getValue()).append("\n");
@@ -142,6 +107,20 @@ public class OrderProcessor {
         sb.append("DO ZAPLATY: ").append(discountedValue(order)).append("\n");
         sb.append("=============================");
         return sb.toString();
+    }
+
+    private void appendInvoiceItem(StringBuilder sb, CartItem item) {
+        BigDecimal unitPrice = item.getProduct().getValue();
+        sb.append(item.getProduct().getName()).append(" x").append(item.getQuantity())
+                .append("   cena jedn.: ").append(item.getProduct().getValue()).append("\n");
+        for (Map.Entry<Config, Integer> chosen : item.getChosenConfigs().entrySet()) {
+            unitPrice = unitPrice.add(chosen.getKey().getAddValue()
+                    .multiply(BigDecimal.valueOf(chosen.getValue())));
+            sb.append("    + ").append(chosen.getKey())
+                    .append(" x").append(chosen.getValue()).append("/szt\n");
+        }
+        BigDecimal linePrice = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+        sb.append("    razem: ").append(linePrice).append("\n");
     }
 
     private BigDecimal discountedValue(Order order) {

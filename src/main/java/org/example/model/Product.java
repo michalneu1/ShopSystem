@@ -2,8 +2,9 @@ package org.example.model;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Product {
@@ -13,6 +14,7 @@ public class Product {
     private String name;
     private ProductType type;
     private List<Config> configs = new ArrayList<>();
+    private final Map<Integer, Integer> configStock = new HashMap<>();
     private int quantity;
 
     public Product(BigDecimal value, ProductType type, String name, int quantity, List<Config> configs) {
@@ -53,8 +55,29 @@ public class Product {
         return configs;
     }
 
+    public void addConfig(Config config, int stock) {
+        configs.add(config);
+        configStock.put(config.getId(), stock);
+    }
+
+    public int getConfigStock(Config config) {
+        return configStock.getOrDefault(config.getId(), 0);
+    }
+
+    public void removeConfigStock(Config config, int quantity) {
+        int left = getConfigStock(config) - quantity;
+        if (left < 0) {
+            throw new IllegalArgumentException("Ilość nie może być mniejsza od 0");
+        }
+        configStock.put(config.getId(), left);
+    }
+
     public int getQuantity() {
         return quantity;
+    }
+
+    public void removeStock(int quantity) {
+        setQuantity(this.quantity - quantity);
     }
 
     public void setQuantity(int quantity) {
