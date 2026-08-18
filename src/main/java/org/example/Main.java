@@ -1,4 +1,5 @@
 package org.example;
+
 import org.example.cli.ShopCLI;
 import org.example.model.*;
 

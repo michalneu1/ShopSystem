@@ -26,7 +26,7 @@ public class ProductManager {
     }
 
     public void removeConfigFromWareHouse(int productId, Config config, int quantity) {
-        findByID(productId).ifPresent(p -> p.removeConfigStock(config, quantity));
+        findByID(productId).ifPresent(product -> product.removeConfigStock(config, quantity));
     }
 
     public Optional<Product> findByID(int id) {

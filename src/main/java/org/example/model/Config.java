@@ -2,7 +2,7 @@ package org.example.model;
 
 import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicInteger;
-
+//todo: dodac quantity i usunac quantitystock
 public class Config {
     private static final AtomicInteger COUNTER = new AtomicInteger(1);
     private String name;

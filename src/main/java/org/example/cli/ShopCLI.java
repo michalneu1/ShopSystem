@@ -33,12 +33,6 @@ public class ShopCLI {
     private Cart cart;
     private ExecutorService pool = Executors.newFixedThreadPool(4);
     private final DiscountRepository discountRepository = new DiscountRepository(Path.of("discounts.txt"));
-    private final int SHOWPRODUCTS = 1;
-    private final int ADDPRODUCTS = 2;
-    private final int SHOWCART = 3;
-    private final int PLACEORDER = 4;
-    private final int CLEARCART = 5;
-    private final int END = 6;
     private final int TIMEOUT = 10;
 
     public ShopCLI(OrderProcessor orderProcessor) {
@@ -54,18 +48,22 @@ public class ShopCLI {
             showMenu();
             System.out.println("Podaj odpowiedź");
             try {
-                switch (getChoice()) {
-                    case SHOWPRODUCTS -> manger.showProducts();
-                    case ADDPRODUCTS -> addProductToCart();
-                    case SHOWCART -> cart.showCart();
-                    case PLACEORDER -> placeOrder();
-                    case CLEARCART -> cart = new Cart();
+                Optional<MenuOption> option = MenuOption.fromId(getChoice());
+                if (option.isEmpty()) {
+                    System.out.println("Nieznana opcja");
+                    continue;
+                }
+                switch (option.get()) {
+                    case SHOW_PRODUCTS -> manger.showProducts();
+                    case ADD_PRODUCT -> addProductToCart();
+                    case SHOW_CART -> cart.showCart();
+                    case PLACE_ORDER -> placeOrder();
+                    case CLEAR_CART -> cart = new Cart();
                     case END -> {
                         running = false;
                         pool.shutdown();
                         pool.awaitTermination(TIMEOUT, TimeUnit.SECONDS);
                     }
-                    default -> System.out.println("Nieznana opcja");
                 }
             } catch (Exception e) {
                 System.out.println("Błąd: " + e.getMessage());
@@ -83,14 +81,10 @@ public class ShopCLI {
             }
         }
     }
-
     private void showMenu() {
-        System.out.println(SHOWPRODUCTS + ". Przeglądaj produkty");
-        System.out.println(ADDPRODUCTS + ". Dodaj produkt do koszyka");
-        System.out.println(SHOWCART + ". Sprawdż koszyk");
-        System.out.println(PLACEORDER + ". Złóż zamówienie");
-        System.out.println(CLEARCART + ". Wyczyść koszyk");
-        System.out.println(END + ". wyjdź");
+        for (MenuOption option : MenuOption.values()) {
+            System.out.println(option.getId() + ". " + option.getLabel());
+        }
     }
 
     private Product getProduct(int choice) {
