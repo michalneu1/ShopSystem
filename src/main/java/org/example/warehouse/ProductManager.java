@@ -1,6 +1,5 @@
 package org.example.warehouse;
 
-import org.example.model.Config;
 import org.example.model.Product;
 
 import java.math.BigDecimal;
@@ -23,10 +22,6 @@ public class ProductManager {
 
     public void removeProductFromWareHouse(int id, int quantity) {
         findByID(id).ifPresent(p -> p.removeStock(quantity));
-    }
-
-    public void removeConfigFromWareHouse(int productId, Config config, int quantity) {
-        findByID(productId).ifPresent(product -> product.removeConfigStock(config, quantity));
     }
 
     public Optional<Product> findByID(int id) {

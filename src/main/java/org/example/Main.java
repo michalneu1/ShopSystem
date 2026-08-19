@@ -19,14 +19,14 @@ public class Main {
 
         Product laptop = new Product(new BigDecimal("4000"), ProductType.Computer, "Laptop Pro", 5,
                 new ArrayList<>());
-        laptop.addConfig(new Config("Intel i7", new BigDecimal(800), ConfigType.CPU), 30);
-        laptop.addConfig(new Config("Intel i5", new BigDecimal(500), ConfigType.CPU), 2);
-        laptop.addConfig(new Config("32GB RAM", new BigDecimal("600"), ConfigType.RAM), 5);
+        laptop.addConfig(new Config("Intel i7", new BigDecimal(800), ConfigType.CPU, 30));
+        laptop.addConfig(new Config("Intel i5", new BigDecimal(500), ConfigType.CPU, 2));
+        laptop.addConfig(new Config("32GB RAM", new BigDecimal("600"), ConfigType.RAM, 5));
 
         Product phone = new Product(new BigDecimal("2500"), ProductType.Smartphone, "Smartfon X", 10,
                 new ArrayList<>());
-        phone.addConfig(new Config("Czarny", BigDecimal.ZERO, ConfigType.COLOR), 5);
-        phone.addConfig(new Config("Etui", new BigDecimal("50"), ConfigType.ACCESSORY), 5);
+        phone.addConfig(new Config("Czarny", BigDecimal.ZERO, ConfigType.COLOR, 5));
+        phone.addConfig(new Config("Etui", new BigDecimal("50"), ConfigType.ACCESSORY, 5));
 
         Product cable = new Product(new BigDecimal("30"), ProductType.Electronics, "Kabel USB-C", 100,
                 new ArrayList<>());

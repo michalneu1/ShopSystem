@@ -71,10 +71,9 @@ public class OrderProcessor {
     }
 
     private void removeFromWarehouse(CartItem item) {
-        int productId = item.getProduct().getId();
-        manager.removeProductFromWareHouse(productId, item.getQuantity());
+        manager.removeProductFromWareHouse(item.getProduct().getId(), item.getQuantity());
         item.getChosenConfigs().forEach((config, perUnit) ->
-                manager.removeConfigFromWareHouse(productId, config, perUnit * item.getQuantity()));
+                config.removeStock(perUnit * item.getQuantity()));
     }
 
     /**

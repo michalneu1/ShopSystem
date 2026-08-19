@@ -26,13 +26,13 @@ public class OrderValidator {
             throw new InsufficientStockException(
                     item.getProduct().getName(), item.getQuantity(), inStock.getQuantity());
         }
-        validateConfigStock(inStock, item);
+        validateConfigStock(item);
     }
 
-    private void validateConfigStock(Product inStock, CartItem item) {
+    private void validateConfigStock(CartItem item) {
         item.getChosenConfigs().forEach((config, perUnit) -> {
             int needed = perUnit * item.getQuantity();
-            int available = inStock.getConfigStock(config);
+            int available = config.getQuantity();
             if (available < needed) {
                 throw new InsufficientStockException(config.getName(), needed, available);
             }
